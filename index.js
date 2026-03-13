@@ -22,10 +22,11 @@ function launchReveal() {
       .forEach(el => el.classList.add('in'));
   }, 480);
 
+  // Hide curtains after transition completes — don't remove, prevents flash
   setTimeout(() => {
-    curtainTop.remove();
-    curtainBot.remove();
-  }, 1400);
+    curtainTop.style.display = 'none';
+    curtainBot.style.display = 'none';
+  }, 1300);
 }
 
 Promise.all([
