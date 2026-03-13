@@ -1,442 +1,478 @@
-document.addEventListener("DOMContentLoaded", () => {
+/* ════════════════════════════════
 
-  // ===================================
-  // PAGE LOAD ANIMATION
-  // ===================================
-  window.addEventListener('load', () => {
-    document.body.classList.add('loaded');
-  });
+1. CINEMATIC HERO REVEAL
+   ════════════════════════════════ */
 
-  // ===================================
-  // SCROLL PROGRESS BAR
-  // ===================================
-  const scrollProgress = document.querySelector('.scroll-progress');
-  
-  if (scrollProgress) {
-    window.addEventListener('scroll', () => {
-      const winScroll = window.scrollY;
-      const height = document.documentElement.scrollHeight - window.innerHeight;
-      const scrolled = (winScroll / height) * 100;
-      scrollProgress.style.width = scrolled + '%';
-    });
-  }
+const loader = document.getElementById('loader')
+const curtainTop = document.getElementById('curtain-top')
+const curtainBot = document.getElementById('curtain-bot')
 
-  // ===================================
-  // JOURNEY TIMELINE REVEAL
-  // ===================================
-  const journeyItems = document.querySelectorAll(".timeline-item");
+function launchReveal(){
 
-  if (journeyItems.length) {
-    const journeyObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.style.opacity = "1";
-          entry.target.style.transform = "translateY(0)";
-        }
-      });
-    }, { threshold: 0.2 });
+loader.style.transition = 'opacity .4s ease'
+loader.style.opacity = '0'
 
-    journeyItems.forEach(item => {
-      item.style.opacity = "0";
-      item.style.transform = "translateY(8px)";
-      item.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-      journeyObserver.observe(item);
-    });
-  }
+setTimeout(()=>{
+loader.style.display = 'none'
+},420)
 
-  // ===================================
-  // PRINCIPLES REVEAL
-  // ===================================
-  const principles = document.querySelectorAll(".principle");
+setTimeout(()=>{
+if(curtainTop) curtainTop.classList.add('open')
+if(curtainBot) curtainBot.classList.add('open')
+},200)
 
-  if (principles.length) {
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.style.opacity = 1;
-          e.target.style.transform = "translateY(0)";
-        }
-      });
-    }, { threshold: 0.2 });
+setTimeout(()=>{
+document.querySelectorAll('#hero .fu, #hero .cr')
+.forEach(el => el.classList.add('in'))
+},480)
 
-    principles.forEach(p => {
-      p.style.opacity = 0;
-      p.style.transform = "translateY(6px)";
-      p.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-      obs.observe(p);
-    });
-  }
+setTimeout(()=>{
+if(curtainTop) curtainTop.remove()
+if(curtainBot) curtainBot.remove()
+},1400)
 
-  // ===================================
-  // MINDSET CARDS REVEAL
-  // ===================================
-  const mindsetCards = document.querySelectorAll(".mindset-card");
+}
 
-  if (mindsetCards.length) {
-    const mindsetObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-        }
-      });
-    }, { threshold: 0.2 });
+if(document.fonts){
+document.fonts.ready.then(()=>setTimeout(launchReveal,900))
+}else{
+setTimeout(launchReveal,1100)
+}
 
-    mindsetCards.forEach(card => mindsetObserver.observe(card));
-  }
+/* ════════════════════════════════
+2. WEBGL FILM GRAIN
+════════════════════════════════ */
 
-  // ===================================
-  // SKILLS LADDER
-  // ===================================
-  const steps = document.querySelectorAll(".step");
-  const images = document.querySelectorAll(".bg-img");
-  const baseImage = document.querySelector(".bg-img.base");
+(function initGrain(){
 
-  if (steps.length && images.length) {
-    // Reveal animation with staggered timing
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach((entry, index) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => {
-            entry.target.classList.add("visible");
-          }, index * 100);
-        } else {
-          entry.target.classList.remove("visible");
-        }
-      });
-    }, {
-      threshold: 0.25
-    });
+const canvas = document.getElementById('grain-canvas')
 
-    steps.forEach(step => observer.observe(step));
+if(!canvas) return
 
-    // Background switching
-    function activateImage(key) {
-      if (baseImage) baseImage.classList.remove("active");
-      
-      images.forEach(img => {
-        if (img.dataset.key === key) {
-          img.classList.add("active");
-        } else if (!img.classList.contains("base")) {
-          img.classList.remove("active");
-        }
-      });
-    }
+const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
 
-    function resetToBase() {
-      images.forEach(img => {
-        if (!img.classList.contains("base")) {
-          img.classList.remove("active");
-        }
-      });
-      if (baseImage) baseImage.classList.add("active");
-    }
+if(!gl){
+canvas.remove()
+return
+}
 
-    steps.forEach(step => {
-      step.addEventListener("mouseenter", () => {
-        activateImage(step.dataset.image);
-      });
-      step.addEventListener("mouseleave", () => {
-        resetToBase();
-      });
-    });
+function resize(){
+canvas.width = window.innerWidth
+canvas.height = window.innerHeight
+gl.viewport(0,0,canvas.width,canvas.height)
+}
 
-    const ladderCard = document.querySelector(".ladder-card");
-    if (ladderCard) {
-      ladderCard.addEventListener("mouseleave", () => {
-        resetToBase();
-      });
-    }
-  }
+resize()
+window.addEventListener('resize',resize)
 
-  // ===================================
-  // ARTICLES CAROUSEL
-  // ===================================
-  const ARTICLES = [
-    { 
-      title: "A strong mind does not ask for pity.", 
-      image: "images/a1.jpg",
-      link: "articles/article-draft.html"
-    },
-    { 
-      title: "Motivation fades. Systems stay.", 
-      image: "images/a2.jpg", 
-      link: "articles/article-2.html"
-    },
-    { 
-      title: "Long-term thinking is a competitive advantage.", 
-      image: "images/a3.jpg",
-      link: "articles/article-draft.html"
-    },
-    { 
-      title: "Discipline is quieter than motivation.", 
-      image: "images/a4.jpg", 
-      link: "articles/article-draft.html"
-    },
-    { 
-      title: "Your mindset shapes your reality.", 
-      image: "images/a5.jpg", 
-      link: "articles/article-draft.html"
-    },
-    { 
-      title: "Growth happens outside comfort zones.", 
-       image: "images/a6.jpg", 
-      link: "articles/article-draft.html"
-    }
-  ];
+const vs = gl.createShader(gl.VERTEX_SHADER)
 
-  // Responsive carousel parameters
-  const isMobile = window.innerWidth <= 600;
-  
-  const GAP = isMobile ? 260 : 320;
-  const MAX_ROT = isMobile ? 18 : 22;
-  const MAX_Z = isMobile ? 200 : 280;
-  const MIN_SCALE = isMobile ? 0.68 : 0.58;
-  const SCALE_BOOST = isMobile ? 0.32 : 0.42;
-  const FRICTION = 0.88;
-  const SNAP_THRESHOLD = 1.8;
-  const SNAP_STRENGTH = 0.16;
+gl.shaderSource(vs,"attribute vec2 a_pos; void main(){ gl_Position = vec4(a_pos,0,1); }")
 
-  const cardsRoot = document.getElementById("cards");
-  
-  if (!cardsRoot) {
-    console.error("Cards container not found!");
-    return;
-  }
+gl.compileShader(vs)
 
-  let items = [];
-  let scrollX = 0;
-  let velocity = 0;
-  let activeIndex = 0;
-  let rafId = null;
+const fs = gl.createShader(gl.FRAGMENT_SHADER)
 
-  const mod = (n, m) => ((n % m) + m) % m;
+gl.shaderSource(fs,`
+precision mediump float;
 
-  // Create cards
-  ARTICLES.forEach((a, i) => {
-    const card = document.createElement("article");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-inner">
-        <img src="${a.image}" alt="${a.title}" draggable="false" loading="lazy">
-        <div class="card__text">${a.title}</div>
-        <div class="read-more">Read More</div>
-      </div>
-    `;
-    
-    card.addEventListener("click", () => {
-      if (i === activeIndex) {
-        // Store state before navigation
-        sessionStorage.setItem("homeScrollY", window.scrollY);
-        sessionStorage.setItem("carouselScrollX", scrollX);
-        sessionStorage.setItem("lastActiveCard", i);
+uniform float u_time;
+uniform vec2 u_res;
 
-        // Navigate (only if link is not #)
-        if (a.link !== "#") {
-          window.location.href = a.link;
-        } else {
-          console.log("Article link coming soon!");
-        }
-      } else {
-        // Navigate to clicked card
-        const targetIndex = i;
-        const diff = targetIndex - activeIndex;
-        const len = items.length;
-        
-        let shortestDiff = diff;
-        if (Math.abs(diff + len) < Math.abs(shortestDiff)) shortestDiff = diff + len;
-        if (Math.abs(diff - len) < Math.abs(shortestDiff)) shortestDiff = diff - len;
-        
-        velocity = shortestDiff * GAP * 0.18;
-      }
-    });
-    
-    cardsRoot.appendChild(card);
-    items.push({ el: card, targetX: i * GAP });
-  });
+float hash(vec2 p){
+p = fract(p * vec2(234.34,435.345));
+p += dot(p,p+34.23);
+return fract(p.x*p.y);
+}
 
-  console.log(`✅ Created ${items.length} cards`);
+void main(){
 
-  // Check if returning from an article
-  const savedIndex = sessionStorage.getItem("lastActiveCard");
-  const savedScrollX = sessionStorage.getItem("carouselScrollX");
-  const savedScrollY = sessionStorage.getItem("homeScrollY");
+vec2 uv = gl_FragCoord.xy / u_res;
 
-  if (savedIndex !== null) {
-    activeIndex = parseInt(savedIndex, 10);
+float grain = hash(uv + fract(u_time * 0.07));
 
-    if (!Number.isNaN(savedScrollX)) {
-      scrollX = parseFloat(savedScrollX);
-    } else {
-      scrollX = items[activeIndex].targetX;
-    }
+float v = grain * 0.06;
 
-    // Restore page scroll after layout
-    requestAnimationFrame(() => {
-      window.scrollTo(0, parseInt(savedScrollY || 0, 10));
-    });
+gl_FragColor = vec4(v,v,v,grain * 0.18);
 
-    items.forEach((item, i) => {
-      item.el.classList.toggle("active", i === activeIndex);
-    });
+}
+`)
 
-    // Cleanup
-    sessionStorage.removeItem("lastActiveCard");
-    sessionStorage.removeItem("carouselScrollX");
-    sessionStorage.removeItem("homeScrollY");
-  }
+gl.compileShader(fs)
 
-  function update() {
-    const track = items.length * GAP;
-    const half = track / 2;
-    const visibilityThreshold = isMobile ? 400 : 570;
+const prog = gl.createProgram()
 
-    let closest = Infinity;
-    let closestIndex = 0;
+gl.attachShader(prog,vs)
+gl.attachShader(prog,fs)
 
-    items.forEach((item, i) => {
-      let offsetX = item.targetX - scrollX;
-      
-      while (offsetX < -half) offsetX += track;
-      while (offsetX > half) offsetX -= track;
+gl.linkProgram(prog)
 
-      const absOffset = Math.abs(offsetX);
-      const depth = Math.max(0, 1 - Math.pow(absOffset / visibilityThreshold, 0.9));
+gl.useProgram(prog)
 
-      const scale = MIN_SCALE + (depth * SCALE_BOOST);
-      const z = depth * MAX_Z;
+const buf = gl.createBuffer()
 
-      const rotationFactor = offsetX / visibilityThreshold;
-      const rot = rotationFactor * MAX_ROT;
+gl.bindBuffer(gl.ARRAY_BUFFER,buf)
 
-      let opacity = 0.32 + (depth * 0.68);
-      
-      if (absOffset > visibilityThreshold * 1.08) {
-        opacity = 0;
-      }
+gl.bufferData(
+gl.ARRAY_BUFFER,
+new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),
+gl.STATIC_DRAW
+)
 
-      // Store transform values for hover state
-      item.el.style.setProperty('--x', `${offsetX}px`);
-      item.el.style.setProperty('--z', `${z}px`);
-      item.el.style.setProperty('--rot', `${rot}deg`);
-      item.el.style.setProperty('--scale', scale);
+const aPos = gl.getAttribLocation(prog,'a_pos')
 
-      item.el.style.transform = 
-        `translate3d(${offsetX}px, -50%, ${z}px) rotateY(${rot}deg) scale(${scale})`;
-      
-      item.el.style.zIndex = Math.round(1000 + z);
-      item.el.style.opacity = opacity;
-      item.el.style.pointerEvents = opacity < 0.15 ? 'none' : 'auto';
+gl.enableVertexAttribArray(aPos)
 
-      if (absOffset < closest) {
-        closest = absOffset;
-        closestIndex = i;
-      }
-    });
+gl.vertexAttribPointer(aPos,2,gl.FLOAT,false,0,0)
 
-    if (activeIndex !== closestIndex) {
-      activeIndex = closestIndex;
-      items.forEach((item, i) => {
-        item.el.classList.toggle("active", i === activeIndex);
-      });
-    }
-  }
+const uTime = gl.getUniformLocation(prog,'u_time')
+const uRes = gl.getUniformLocation(prog,'u_res')
 
-  function tick() {
-    scrollX += velocity;
-    velocity *= FRICTION;
+gl.enable(gl.BLEND)
+gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA)
 
-    const track = items.length * GAP;
-    scrollX = mod(scrollX, track);
+let t = 0
 
-    const targetX = items[activeIndex].targetX;
-    let delta = targetX - scrollX;
+function render(){
 
-    if (delta > track / 2) delta -= track;
-    if (delta < -track / 2) delta += track;
+t += 1
 
-    if (Math.abs(velocity) < SNAP_THRESHOLD) {
-      scrollX += delta * SNAP_STRENGTH;
-      
-      if (Math.abs(delta) < 0.4 && Math.abs(velocity) < 0.08) {
-        scrollX = targetX;
-        velocity = 0;
-      }
-    } else {
-      scrollX += delta * 0.045;
-    }
+gl.uniform1f(uTime,t)
+gl.uniform2f(uRes,canvas.width,canvas.height)
 
-    update();
-    rafId = requestAnimationFrame(tick);
-  }
+gl.drawArrays(gl.TRIANGLES,0,6)
 
-  // Button controls
-  const leftBtn = document.querySelector(".carousel-btn.left");
-  const rightBtn = document.querySelector(".carousel-btn.right");
-  
-  if (leftBtn) {
-    leftBtn.addEventListener("click", () => {
-      velocity -= GAP * 0.18;
-    });
-  }
-  
-  if (rightBtn) {
-    rightBtn.addEventListener("click", () => {
-      velocity += GAP * 0.18;
-    });
-  }
+requestAnimationFrame(render)
 
-  // Keyboard controls
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft") {
-      velocity -= GAP * 0.18;
-      e.preventDefault();
-    } else if (e.key === "ArrowRight") {
-      velocity += GAP * 0.18;
-      e.preventDefault();
-    }
-  });
+}
 
-  // Touch support for mobile
-  let touchStartX = 0;
-  let touchEndX = 0;
+render()
 
-  cardsRoot.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
-  }, { passive: true });
+})()
 
-  cardsRoot.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
-  }, { passive: true });
+/* ════════════════════════════════
+3. SCROLL VELOCITY DISTORTION
+════════════════════════════════ */
 
-  function handleSwipe() {
-    const swipeThreshold = 50;
-    const diff = touchStartX - touchEndX;
-    
-    if (Math.abs(diff) > swipeThreshold) {
-      if (diff > 0) {
-        // Swiped left - go to next
-        velocity += GAP * 0.18;
-      } else {
-        // Swiped right - go to previous
-        velocity -= GAP * 0.18;
-      }
-    }
-  }
+(function initScrollDistort(){
 
-  // Initialize
-  update();
+let lastScroll = window.scrollY
+let velocity = 0
+let rafId
 
-  // Force active class on initial load
-  items.forEach((item, i) => {
-    item.el.classList.toggle("active", i === activeIndex);
-  });
+const moImages = document.querySelectorAll('.mo img')
 
-  tick();
+function applyDistort(){
 
-  // Cleanup
-  window.addEventListener("beforeunload", () => {
-    if (rafId) cancelAnimationFrame(rafId);
-  });
+const current = window.scrollY
+const raw = current - lastScroll
 
-});
+lastScroll = current
+
+velocity += (raw - velocity) * 0.25
+
+const clamp = Math.max(-18,Math.min(18,velocity))
+
+const skewY = clamp * 0.18
+const scaleY = 1 + Math.abs(clamp) * 0.003
+
+moImages.forEach(img=>{
+img.style.transform = "skewY(${skewY}deg) scaleY(${scaleY})"
+})
+
+rafId = requestAnimationFrame(applyDistort)
+
+}
+
+applyDistort()
+
+document.addEventListener('visibilitychange',()=>{
+
+if(document.hidden){
+cancelAnimationFrame(rafId)
+}else{
+applyDistort()
+}
+
+})
+
+})()
+
+/* ════════════════════════════════
+CURSOR
+════════════════════════════════ */
+
+const dot = document.getElementById('c-dot')
+const ring = document.getElementById('c-ring')
+
+let mx = 0
+let my = 0
+let rx = 0
+let ry = 0
+
+document.addEventListener('mousemove',e=>{
+
+mx = e.clientX
+my = e.clientY
+
+if(dot){
+dot.style.left = mx + 'px'
+dot.style.top = my + 'px'
+}
+
+})
+
+function cursorLoop(){
+
+rx += (mx - rx) * 0.1
+ry += (my - ry) * 0.1
+
+if(ring){
+ring.style.left = rx + 'px'
+ring.style.top = ry + 'px'
+}
+
+requestAnimationFrame(cursorLoop)
+
+}
+
+cursorLoop()
+
+document.querySelectorAll('a,.sk,.mo,.mag-btn').forEach(el=>{
+
+el.addEventListener('mouseenter',()=>{
+
+if(dot){
+dot.style.width='12px'
+dot.style.height='12px'
+}
+
+if(ring){
+ring.style.width='46px'
+ring.style.height='46px'
+ring.style.borderColor='rgba(240,235,226,.5)'
+}
+
+})
+
+el.addEventListener('mouseleave',()=>{
+
+if(dot){
+dot.style.width='5px'
+dot.style.height='5px'
+}
+
+if(ring){
+ring.style.width='28px'
+ring.style.height='28px'
+ring.style.borderColor='rgba(240,235,226,.28)'
+}
+
+})
+
+})
+
+/* ════════════════════════════════
+MAGNETIC BUTTONS
+════════════════════════════════ */
+
+document.querySelectorAll('.mag-btn').forEach(btn=>{
+
+const inner = btn.querySelector('.mag-btn-inner')
+
+btn.addEventListener('mousemove',e=>{
+
+const r = btn.getBoundingClientRect()
+
+const dx = e.clientX - (r.left + r.width/2)
+const dy = e.clientY - (r.top + r.height/2)
+
+inner.style.transform = "translate(${dx*.28}px, ${dy*.28}px)"
+
+})
+
+btn.addEventListener('mouseleave',()=>{
+
+inner.style.transform='translate(0,0)'
+
+})
+
+})
+
+/* ════════════════════════════════
+SCROLL PROGRESS
+════════════════════════════════ */
+
+const prog = document.getElementById('prog')
+
+window.addEventListener('scroll',()=>{
+
+const pct = window.scrollY / (document.documentElement.scrollHeight - innerHeight) * 100
+
+if(prog) prog.style.width = pct + '%'
+
+},{passive:true})
+
+/* ════════════════════════════════
+NAV HIDE
+════════════════════════════════ */
+
+let lastY = 0
+
+const topNav = document.getElementById('top-nav')
+
+window.addEventListener('scroll',()=>{
+
+const y = window.scrollY
+
+if(topNav){
+topNav.style.transform =
+(y > 70 && y > lastY) ? 'translateY(-110%)' : 'translateY(0)'
+}
+
+lastY = y
+
+},{passive:true})
+
+/* ════════════════════════════════
+SCROLL REVEAL
+════════════════════════════════ */
+
+const io = new IntersectionObserver(entries=>{
+
+entries.forEach(e=>{
+if(e.isIntersecting) e.target.classList.add('in')
+})
+
+},{threshold:0.08})
+
+document.querySelectorAll('.fu,.cr').forEach(el=>io.observe(el))
+
+/* ════════════════════════════════
+SECTION INDICATOR
+════════════════════════════════ */
+
+const sections = ['hero','projects','stack','moments','contact']
+
+const snItems = document.querySelectorAll('.sn-item')
+
+const secObs = new IntersectionObserver(entries=>{
+
+entries.forEach(e=>{
+
+if(e.isIntersecting){
+
+snItems.forEach(item=>{
+item.classList.toggle(
+'active',
+item.dataset.sec === e.target.id
+)
+})
+
+}
+
+})
+
+},{threshold:0.35})
+
+sections.forEach(id=>{
+
+const el = document.getElementById(id)
+
+if(el) secObs.observe(el)
+
+})
+
+snItems.forEach(item=>{
+
+item.addEventListener('click',()=>{
+
+const el = document.getElementById(item.dataset.sec)
+
+if(el) el.scrollIntoView({behavior:'smooth'})
+
+})
+
+})
+
+/* ════════════════════════════════
+HERO GHOST PARALLAX
+════════════════════════════════ */
+
+const ghost = document.querySelector('.hero-ghost')
+
+document.addEventListener('mousemove',e=>{
+
+if(!ghost) return
+
+const x = (e.clientX / window.innerWidth - 0.5) * 38
+const y = (e.clientY / window.innerHeight - 0.5) * 38
+
+ghost.style.transform = "translate(${x}px, ${y}px)"
+
+})
+
+/* ════════════════════════════════
+PROJECT PREVIEW
+════════════════════════════════ */
+
+const preview = document.getElementById('proj-preview')
+const ppImg = document.getElementById('pp-img')
+const ppLabel = document.getElementById('pp-label')
+
+document.querySelectorAll('.proj-row').forEach(row=>{
+
+row.addEventListener('mouseenter',()=>{
+
+const src = row.dataset.preview
+
+if(src && ppImg) ppImg.src = src
+
+if(ppLabel) ppLabel.textContent = row.dataset.name || ''
+
+if(preview) preview.classList.add('show')
+
+})
+
+row.addEventListener('mouseleave',()=>{
+
+if(preview) preview.classList.remove('show')
+
+})
+
+row.addEventListener('mousemove',e=>{
+
+if(!preview) return
+
+const x = e.clientX + 28
+const y = e.clientY - 80
+
+const maxX = window.innerWidth - preview.offsetWidth - 20
+const maxY = window.innerHeight - preview.offsetHeight - 20
+
+preview.style.left = Math.min(x,maxX) + 'px'
+preview.style.top = Math.max(20,Math.min(y,maxY)) + 'px'
+
+})
+
+})
+
+/* ════════════════════════════════
+CLOCK
+════════════════════════════════ */
+
+const ft = document.getElementById('f-time')
+
+function tick(){
+
+if(!ft) return
+
+const n = new Date()
+
+ft.textContent =
+"${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')} IST"
+
+}
+
+setInterval(tick,1000)
+tick()
