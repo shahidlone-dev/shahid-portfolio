@@ -62,7 +62,7 @@ const navLinksEl  = document.getElementById('nav-links');
 const navInd      = document.getElementById('nav-ind');
 const navLinks    = document.querySelectorAll('.n-links a[data-section]');
 const ghostNum    = document.getElementById('ghost-num');
-const sectionNums = { hero:'01', projects:'02', manifesto:'03', stack:'04', moments:'05', contact:'06' };
+const sectionNums = { hero:'01', projects:'02', manifesto:'03', stack:'04', moments:'05', buildlog:'06', contact:'07' };
 
 function moveInd(link) {
   if (!link) return;
@@ -128,7 +128,13 @@ setTimeout(() => moveInd(document.querySelector('.n-links a.active') || navLinks
   window.addEventListener('resize', resize);
 
   let i = 0;
-  setInterval(() => { i++; gl.uniform1f(ut, i); gl.drawArrays(gl.TRIANGLES, 0, 6); }, 33);
+  function renderGrain() {
+    i++;
+    gl.uniform1f(ut, i);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    requestAnimationFrame(renderGrain);
+  }
+  renderGrain();
 })();
 
 /* ─── 7. SCROLL VELOCITY DISTORTION ─── */
@@ -162,36 +168,37 @@ setTimeout(() => moveInd(document.querySelector('.n-links a.active') || navLinks
   window.addEventListener('scroll', () => { if (!run) { run = true; loop(); } }, { passive: true });
 })();
 
-/* ─── 8. CURSOR ─── */
-const dot  = document.getElementById('c-dot');
-const ring = document.getElementById('c-ring');
-let mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my;
-dot.style.left  = mx + 'px'; dot.style.top  = my + 'px';
-ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-
-document.addEventListener('mousemove', e => {
-  mx = e.clientX; my = e.clientY;
-  dot.style.left = mx + 'px'; dot.style.top = my + 'px';
-});
-(function loop() {
-  rx += (mx - rx) * 0.1; ry += (my - ry) * 0.1;
+/* ─── 8. CURSOR — mouse/hover devices only ─── */
+if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  const dot  = document.getElementById('c-dot');
+  const ring = document.getElementById('c-ring');
+  let mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my;
+  dot.style.left  = mx + 'px'; dot.style.top  = my + 'px';
   ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-  requestAnimationFrame(loop);
-})();
 
-// Event delegation — one listener each, not per-element
-document.addEventListener('mouseover', e => {
-  if (e.target.closest('a, .sk, .mo, .mag-btn, .proj-expand')) {
-    dot.style.width = '14px'; dot.style.height = '14px';
-    ring.style.width = '50px'; ring.style.height = '50px';
-  }
-});
-document.addEventListener('mouseout', e => {
-  if (e.target.closest('a, .sk, .mo, .mag-btn, .proj-expand')) {
-    dot.style.width = '6px'; dot.style.height = '6px';
-    ring.style.width = '30px'; ring.style.height = '30px';
-  }
-});
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+  });
+  (function loop() {
+    rx += (mx - rx) * 0.1; ry += (my - ry) * 0.1;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(loop);
+  })();
+
+  document.addEventListener('mouseover', e => {
+    if (e.target.closest('a, .sk, .mo, .mag-btn, .proj-expand')) {
+      dot.style.width = '14px'; dot.style.height = '14px';
+      ring.style.width = '50px'; ring.style.height = '50px';
+    }
+  });
+  document.addEventListener('mouseout', e => {
+    if (e.target.closest('a, .sk, .mo, .mag-btn, .proj-expand')) {
+      dot.style.width = '6px'; dot.style.height = '6px';
+      ring.style.width = '30px'; ring.style.height = '30px';
+    }
+  });
+}
 
 /* ─── 9. MAGNETIC BUTTONS — mouse only ─── */
 if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
