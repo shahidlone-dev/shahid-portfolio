@@ -84,7 +84,7 @@ const secIO = new IntersectionObserver(entries => {
     if (sectionNums[id]) ghostNum.textContent = sectionNums[id];
   });
 }, { threshold: 0.3 });
-document.querySelectorAll('section[id]').forEach(s => secIO.observe(s));
+document.querySelectorAll('section[id], div[id="ventures"], div[id="buildlog"]').forEach(s => secIO.observe(s));
 setTimeout(() => moveInd(document.querySelector('.n-links a.active') || navLinks[0]), 80);
 
 /* ─── 6. WEBGL GRAIN — resize bug fixed ─── */
@@ -239,22 +239,9 @@ window.addEventListener('scroll', () => {
   lastY = y;
 }, { passive: true });
 
-/* ─── 12. GHOST PARALLAX — mouse only ─── */
-const ghost = document.querySelector('.hero-ghost');
-let gx = 0, gy = 0, gp = false;
-if (window.matchMedia('(hover: hover)').matches) {
-  document.addEventListener('mousemove', e => {
-    gx = (e.clientX / innerWidth  - 0.5) * 38;
-    gy = (e.clientY / innerHeight - 0.5) * 38;
-    if (!gp) {
-      gp = true;
-      requestAnimationFrame(() => {
-        ghost.style.transform = `translate(${gx}px, ${gy}px)`;
-        gp = false;
-      });
-    }
-  });
-}
+/* ─── 12. GHOST NUMBER — fixed position, updated by secIO, no parallax needed ─── */
+// Ghost number text is updated by the section IntersectionObserver (section 5 above).
+// No parallax: the element is position:fixed so mouse-based translate would fight the layout.
 
 /* ─── 13. PROJECT PREVIEW + EXPAND ─── */
 const preview = document.getElementById('proj-preview');
