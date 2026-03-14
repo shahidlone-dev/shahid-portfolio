@@ -243,31 +243,10 @@ window.addEventListener('scroll', () => {
 // Ghost number text is updated by the section IntersectionObserver (section 5 above).
 // No parallax: the element is position:fixed so mouse-based translate would fight the layout.
 
-/* ─── 13. PROJECT PREVIEW + EXPAND ─── */
-const preview = document.getElementById('proj-preview');
-const ppImg   = document.getElementById('pp-img');
-const ppLabel = document.getElementById('pp-label');
-
-// Hover preview — mouse-only devices only
+/* ─── 13. PROJECT EXPAND (no hover preview — image shown in detail panel) ─── */
 const isHoverDevice = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-if (isHoverDevice && preview) {
-  document.querySelectorAll('.proj-row').forEach(row => {
-    row.addEventListener('mouseenter', () => {
-      const src = row.dataset.preview;
-      ppImg.src = src || '';
-      ppImg.style.display = src ? 'block' : 'none';
-      ppLabel.textContent = row.dataset.name || '';
-      preview.classList.add('show');
-    });
-    row.addEventListener('mouseleave', () => preview.classList.remove('show'));
-    row.addEventListener('mousemove', e => {
-      preview.style.left = Math.min(e.clientX + 28, innerWidth  - preview.offsetWidth  - 20) + 'px';
-      preview.style.top  = Math.max(20, Math.min(e.clientY - 80, innerHeight - preview.offsetHeight - 20)) + 'px';
-    });
-  });
-}
 
-// Expand/collapse — works on both touch and mouse
+// Expand/collapse
 document.querySelectorAll('.proj-expand').forEach((btn, i) => {
   btn.addEventListener('click', e => {
     e.preventDefault(); e.stopPropagation();
@@ -276,27 +255,21 @@ document.querySelectorAll('.proj-expand').forEach((btn, i) => {
     if (!detail) return;
     const isOpen = detail.classList.contains('open');
 
-    // Close all
     document.querySelectorAll('.proj-detail.open').forEach(d => d.classList.remove('open'));
     document.querySelectorAll('.proj-expand.open').forEach(b => b.classList.remove('open'));
     document.querySelectorAll('.proj-row.detail-open').forEach(r => r.classList.remove('detail-open'));
 
-    // Open this one if it was closed
     if (!isOpen) {
       detail.classList.add('open');
       btn.classList.add('open');
       if (row) row.classList.add('detail-open');
-      // On mobile, scroll the row into view after the panel opens
       if (!isHoverDevice) {
-        setTimeout(() => {
-          row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 60);
+        setTimeout(() => row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
       }
     }
   });
 });
 
-// Escape key closes any open detail
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.proj-detail.open').forEach(d => d.classList.remove('open'));
@@ -305,7 +278,48 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/* ─── 14. 3D TILT — STACK CARDS — mouse only ─── */
+/* ─── 14. LIGHTBOX — moments images ─── */
+(function () {
+  const lb     = document.getElementById('lightbox');
+  const lbImg  = document.getElementById('lightbox-img');
+  const lbCap  = document.getElementById('lightbox-cap');
+  const lbClose = document.getElementById('lightbox-close');
+  if (!lb) return;
+
+  function openLightbox(src, cap) {
+    lbImg.src = src;
+    lbCap.textContent = cap || '';
+    lb.classList.add('open');
+    lb.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('nav-open'); // reuse scroll lock
+  }
+  function closeLightbox() {
+    lb.classList.remove('open');
+    lb.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('nav-open');
+    setTimeout(() => { lbImg.src = ''; }, 400);
+  }
+
+  // Click on any .mo to open lightbox
+  document.querySelectorAll('.mo').forEach(mo => {
+    mo.addEventListener('click', () => {
+      const src = mo.dataset.img || mo.querySelector('img')?.src;
+      const cap = mo.dataset.cap || '';
+      if (src) openLightbox(src, cap);
+    });
+  });
+
+  // Close on backdrop or close button
+  lb.addEventListener('click', e => {
+    if (e.target === lb || e.target === lbClose) closeLightbox();
+  });
+  lbClose.addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && lb.classList.contains('open')) closeLightbox();
+  });
+})();
+
+/* ─── 15. 3D TILT — STACK CARDS — mouse only ─── */
 if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
   document.querySelectorAll('.sk').forEach(card => {
     card.addEventListener('mousemove', e => {
@@ -318,7 +332,7 @@ if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
   });
 }
 
-/* ─── 15. MOMENTS MOUSE PARALLAX — mouse only ─── */
+/* ─── 16. MOMENTS MOUSE PARALLAX — mouse only ─── */
 if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
   const moImgs = document.querySelectorAll('.mo img');
   const depths = [8, 6, 10, 7, 9, 6, 8];
@@ -338,7 +352,7 @@ if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
   });
 }
 
-/* ─── 16. CLOCK — Kashmir / IST ─── */
+/* ─── 17. CLOCK — Kashmir / IST ─── */
 const ft = document.getElementById('f-time');
 function tick() {
   ft.textContent = new Intl.DateTimeFormat('en-GB', {
@@ -349,42 +363,55 @@ function tick() {
 setInterval(tick, 1000);
 tick();
 
-/* ─── 17. FOOTER YEAR ─── */
+/* ─── 18. FOOTER YEAR ─── */
 document.getElementById('f-year').textContent = `Engineering from Kashmir · ${new Date().getFullYear()}`;
 
 /* ─── MOBILE NAV — HAMBURGER TOGGLE ─── */
 (function () {
-  const toggle    = document.getElementById('nav-toggle');
-  const mobileNav = document.getElementById('mobile-nav');
-  const links     = document.querySelectorAll('.mobile-nav-link');
+  const toggle   = document.getElementById('nav-toggle');
+  const drawer   = document.getElementById('mobile-nav');
+  const backdrop = document.getElementById('mobile-nav-backdrop');
+  const links    = document.querySelectorAll('.mobile-nav-link');
 
-  if (!toggle || !mobileNav) return;
+  if (!toggle || !drawer) return;
 
   function openNav() {
-    mobileNav.classList.add('open');
+    drawer.classList.add('open');
     toggle.classList.add('open');
     document.body.classList.add('nav-open');
     toggle.setAttribute('aria-expanded', 'true');
-    // Always show nav bar while overlay is open
     topNav.classList.remove('nav-hidden');
+    // Show backdrop only when drawer is visible
+    if (backdrop) {
+      backdrop.style.display = 'block';
+      requestAnimationFrame(() => backdrop.classList.add('open'));
+    }
   }
 
   function closeNav() {
-    mobileNav.classList.remove('open');
+    drawer.classList.remove('open');
     toggle.classList.remove('open');
     document.body.classList.remove('nav-open');
     toggle.setAttribute('aria-expanded', 'false');
+    if (backdrop) {
+      backdrop.classList.remove('open');
+      // Hide backdrop after fade out
+      setTimeout(() => { backdrop.style.display = 'none'; }, 400);
+    }
   }
 
   toggle.addEventListener('click', () => {
-    mobileNav.classList.contains('open') ? closeNav() : openNav();
+    drawer.classList.contains('open') ? closeNav() : openNav();
   });
 
-  // Close on any link tap — small delay so smooth scroll starts first
+  // Close on backdrop tap
+  if (backdrop) {
+    backdrop.addEventListener('click', closeNav);
+  }
+
+  // Close on any link tap
   links.forEach(link => {
-    link.addEventListener('click', () => {
-      setTimeout(closeNav, 80);
-    });
+    link.addEventListener('click', () => setTimeout(closeNav, 80));
   });
 
   // Close on Escape
