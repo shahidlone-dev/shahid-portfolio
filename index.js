@@ -366,6 +366,160 @@ tick();
 /* ─── 18. FOOTER YEAR ─── */
 document.getElementById('f-year').textContent = `Engineering from Kashmir · ${new Date().getFullYear()}`;
 
+/* ─── 19. SITE SEARCH — inline nav bar ─── */
+(function () {
+  const overlay   = document.getElementById('search-overlay');
+  const results   = document.getElementById('search-results');
+  const empty     = document.getElementById('search-empty');
+  const navBar    = document.getElementById('nav-search-bar');
+  const navInput  = document.getElementById('nav-search-input');
+  const navClear  = document.getElementById('nav-search-clear');
+  if (!overlay || !navInput) return;
+
+  /* ── Build index from page content ── */
+  const INDEX = [];
+  const LABELS = {
+    hero: 'Home', projects: 'Work', ventures: 'Stats',
+    manifesto: 'Mindset', stack: 'Stack',
+    moments: 'Life', buildlog: 'Log', contact: 'Contact'
+  };
+  const TARGETS = [
+    '.hero-desc', '.p-name', '.p-about', '.p-status',
+    '.pd-label', '.pd-val', '.vc-label', '.vc-desc',
+    '.mf-line', '.mf-para', '.sk-name', '.sk-about',
+    '.sk-layer', '.sk-detail', '.blog-title', '.blog-detail',
+    '.blog-date', '.blog-tag', '.contact-note',
+    '.ce-val', '.c-name', '.c-handle',
+  ].join(',');
+
+  document.querySelectorAll('section[id], div[id="ventures"]').forEach(sec => {
+    const id    = sec.id;
+    const label = LABELS[id] || id;
+    sec.querySelectorAll(TARGETS).forEach(el => {
+      const text = el.textContent.trim();
+      if (text.length < 4) return;
+      INDEX.push({ text, label, sectionId: id });
+    });
+  });
+
+  /* ── Helpers ── */
+  function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
+  function highlight(text, q) {
+    return text.replace(new RegExp('(' + escRe(q) + ')', 'gi'), '<mark>$1</mark>');
+  }
+
+  /* ── Render dropdown results ── */
+  let activeIdx = -1;
+
+  function render(query) {
+    activeIdx = -1;
+    results.innerHTML = '';
+    empty.classList.remove('show');
+
+    const q = query.trim().toLowerCase();
+    if (q.length < 1) { closeSearch(); return; }
+
+    const seen = new Set();
+    const hits = INDEX.filter(item => {
+      if (!item.text.toLowerCase().includes(q)) return false;
+      const key = item.sectionId + '|' + item.text.slice(0, 80);
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    }).slice(0, 12);
+
+    openSearch(); // show dropdown when typing
+
+    if (!hits.length) { empty.classList.add('show'); return; }
+
+    hits.forEach((item, i) => {
+      const a = document.createElement('a');
+      a.className   = 'sr-item';
+      a.href        = '#' + item.sectionId;
+      a.dataset.idx = i;
+      a.innerHTML   = `
+        <span class="sr-section">${item.label}</span>
+        <span class="sr-text">${highlight(item.text.slice(0, 140), query.trim())}</span>
+        <span class="sr-arrow">↗</span>`;
+      a.addEventListener('click', () => {
+        navInput.value = '';
+        navClear.classList.remove('visible');
+        closeSearch();
+      });
+      results.appendChild(a);
+    });
+  }
+
+  /* ── Keyboard navigation inside dropdown ── */
+  function getItems() { return [...results.querySelectorAll('.sr-item')] }
+  function setActive(idx) {
+    const items = getItems();
+    items.forEach(el => el.classList.remove('active'));
+    if (idx < 0 || idx >= items.length) { activeIdx = -1; return; }
+    activeIdx = idx;
+    items[idx].classList.add('active');
+    items[idx].scrollIntoView({ block: 'nearest' });
+  }
+
+  /* ── Open / close dropdown ── */
+  function openSearch() {
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+  function closeSearch() {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    results.innerHTML = '';
+    empty.classList.remove('show');
+    activeIdx = -1;
+  }
+
+  /* ── Nav input events ── */
+  navInput.addEventListener('input', () => {
+    const q = navInput.value;
+    navClear.classList.toggle('visible', q.length > 0);
+    render(q);
+  });
+
+  navInput.addEventListener('keydown', e => {
+    if (!overlay.classList.contains('open')) return;
+    if (e.key === 'Escape')    { closeSearch(); navInput.blur(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(activeIdx + 1); return; }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); setActive(Math.max(0, activeIdx - 1)); return; }
+    if (e.key === 'Enter') {
+      const items = getItems();
+      const active = items[activeIdx] || items[0];
+      if (active) {
+        active.click();
+        navInput.value = '';
+        navClear.classList.remove('visible');
+      }
+    }
+  });
+
+  navClear.addEventListener('click', () => {
+    navInput.value = '';
+    navClear.classList.remove('visible');
+    navInput.focus();
+    closeSearch();
+  });
+
+  // Click outside dropdown → close
+  document.addEventListener('click', e => {
+    if (!navBar.contains(e.target) && !overlay.contains(e.target)) {
+      closeSearch();
+    }
+  });
+
+  // Ctrl+K / Cmd+K focuses the nav bar
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      navInput.focus();
+      navInput.select();
+    }
+  });
+})();
+
 /* ─── MOBILE NAV — HAMBURGER TOGGLE ─── */
 (function () {
   const toggle   = document.getElementById('nav-toggle');
